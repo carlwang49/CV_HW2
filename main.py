@@ -1,13 +1,9 @@
-from PyQt6.QtWidgets import QApplication, QWidget, QFileDialog, QMainWindow
+from PyQt6.QtWidgets import QApplication, QFileDialog, QMainWindow
 from interface import Ui_MainWindow
-from PyQt6.QtGui import QPixmap
 from PyQt6 import QtWidgets
-from PyQt6.QtCore import Qt
-import os
-import cv2
 from loguru import logger
-import json
 from GraffitiBoard import GraffitiBoard
+from BackgroundSubtraction import background_subtraction
 
 
 class MainApp(QMainWindow, Ui_MainWindow):
@@ -30,11 +26,12 @@ class MainApp(QMainWindow, Ui_MainWindow):
 
         # Connect buttons to methods
         self.pushButton.clicked.connect(self.load_image)  
-        self.pushButton_2.clicked.connect(self.load_video)  
+        self.pushButton_2.clicked.connect(self.load_video)
+        self.pushButton_3.clicked.connect(self.run_background_subtraction)
 
         # intialize 
-        self.load_image_path = ""
-        self.load_image_video = ""
+        self.image_path = ""
+        self.video_path = ""
 
     def load_image(self):
         # Open a QFileDialog to select an image
@@ -45,8 +42,8 @@ class MainApp(QMainWindow, Ui_MainWindow):
             "Image Files (*.jpeg; *.jpg; *.png; *.bmp; *.gif)"
         )
         if file_name:
-            self.load_image_path = file_name
-            logger.info(f"Image loaded: {self.load_image_path}")
+            self.image_path = file_name
+            logger.info(f"Image loaded: {self.image_path}")
 
     def load_video(self):
         # Open a QFileDialog to select a video
@@ -57,8 +54,11 @@ class MainApp(QMainWindow, Ui_MainWindow):
             "Video Files (*.mp4; *.avi; *.mov; *.mkv)"
         )
         if file_name:
-            self.load_video_path = file_name
-            logger.info(f"Video loaded: {self.load_video_path}")
+            self.video_path = file_name
+            logger.info(f"Video loaded: {self.video_path}")
+    
+    def run_background_subtraction(self):
+        background_subtraction(self.video_path)
 
 
 if __name__ == "__main__":
