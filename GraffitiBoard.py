@@ -19,7 +19,10 @@ class GraffitiBoard(QWidget):
         # Set the pen color to white for drawing
         self.pen = QPen(QColor('white'), 3, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin)
         self.setAutoFillBackground(True)  # Ensure the background color fills the widget
-
+    
+    def reset(self):
+        self.lines = [] 
+        self.update()  
 
     def mousePressEvent(self, event: QMouseEvent):
         if event.buttons() & Qt.MouseButton.LeftButton:
@@ -42,3 +45,4 @@ class GraffitiBoard(QWidget):
         painter.setPen(self.pen)
         for line in self.lines:
             painter.drawLine(line[0], line[1])
+    
