@@ -38,6 +38,7 @@ class MainApp(QMainWindow, Ui_MainWindow):
         self.image_path = ""
         self.video_path = ""
         self.initial_point = None
+        self.n_components = None
 
     def load_image(self):
         # Open a QFileDialog to select an image
@@ -78,7 +79,8 @@ class MainApp(QMainWindow, Ui_MainWindow):
             print("Could not find the initial point to track.")
     
     def run_dimension_reduction(self):
-        dimension_reduction(self.image_path)
+        self.n_components = dimension_reduction(self.image_path)
+        logger.info(f"The minimum number of components with MSE <= 3.0: {self.n_components}")
 
     
 

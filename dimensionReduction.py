@@ -1,69 +1,108 @@
 from skimage import io, color
-from skimage.transform import resize
-import numpy as np
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
+import numpy as np
+from sklearn.metrics import mean_squared_error
+from loguru import logger
 
-# Function for dimension reduction and plotting
+
+def calculate_mse_directly(original_pixels, reconstructed_pixels):
+    """
+    Calculate Mean Squared Error (MSE) directly between two sets of pixels.
+
+    Parameters:
+    - original_pixels (numpy.ndarray): Array containing the original pixel values.
+    - reconstructed_pixels (numpy.ndarray): Array containing the reconstructed pixel values.
+
+    Returns:
+    - float: Calculated MSE between original and reconstructed pixels.
+    """
+    if original_pixels.shape != reconstructed_pixels.shape:
+        raise ValueError("The images must have the same number of pixels.")
+
+    # Calculate the number of pixels
+    n_pixels = original_pixels.shape[0]
+
+    # Direct calculation of MSE
+    mse = np.sum((original_pixels - reconstructed_pixels) ** 2) / n_pixels
+
+    return mse
+
+
 def dimension_reduction(image_path):
+    """
+    Perform dimension reduction on a given image using Principal Component Analysis (PCA).
+
+    Parameters:
+    - image_path (str): Path to the input image file.
+
+    Returns:
+    - int: Minimum number of components required to achieve reconstruction error less than or equal to 3.0.
+    """
     # Load the image
     image = io.imread(image_path)
+
     # Convert to grayscale
     gray_image = color.rgb2gray(image)
+
     # Normalize the grayscale image
     normalized_image = gray_image / 255.0
-    # Flatten the image to 1D array for PCA
-    flatten_image = normalized_image.flatten()
-    
-    # Initialize PCA with minimum possible components
-    pca = PCA(n_components=min(normalized_image.shape))
-    # Fit and transform the image data
-    transformed_data = pca.fit_transform(normalized_image)
-    
-    # Find the minimum number of components with reconstruction error less or equal to 3.0
-    min_error = float('inf')
-    n_components = 0
-    reconstruction = None
-    
-    for i in range(1, transformed_data.shape[1] + 1):
-        # Apply inverse transform to reconstruct the image
-        pca.n_components = i
-        print(i)
-        reconstructed = pca.inverse_transform(transformed_data)
+
+    # Initialize the MSE threshold
+    mse_threshold = 3.0
+
+    # Initialize variables for finding the minimum number of components
+    mse = float('inf')
+    min_n = None
+    reconstructed_image = None
+
+    # Iterate from the minimum number of components to 1 to find the best number of components
+    for n in range(min(gray_image.shape), 0, -1):
+        # Perform PCA
+        pca = PCA(n_components=n)
+        pca.fit(normalized_image)  # Fit PCA on the image
+        transformed_data = pca.transform(normalized_image)
+        reconstructed_data = pca.inverse_transform(transformed_data)
+
         # Calculate MSE
-        mse = np.mean((flatten_image - reconstructed.flatten()) ** 2)
-        # Check if the reconstruction error is less than or equal to 3.0
-        if mse <= 3.0 and mse < min_error:
-            min_error = mse
-            n_components = i
-            reconstruction = reconstructed
+        mse = mean_squared_error(gray_image.flatten(),
+                                 reconstructed_data.flatten())
+
+        # If MSE is within the threshold, store the number of components and reconstructed image
+        if mse <= mse_threshold:
+            min_n = n
+            reconstructed_image = reconstructed_data
+            logger.info(f"MSE for n={n}: {mse}")
+            continue  # Stop if we find a good reconstruction
+        else:
             break
-    
-    # Reshape the reconstructed image back to its original shape
-    reconstructed_image = reconstruction.reshape(normalized_image.shape)
-    
+
     # Plot the original, grayscale, and reconstructed images
     fig, axes = plt.subplots(1, 3, figsize=(15, 5))
-    
+
     # Original Image
     axes[0].imshow(image)
     axes[0].set_title('Original Image')
     axes[0].axis('off')
-    
+
     # Grayscale Image
     axes[1].imshow(gray_image, cmap='gray')
     axes[1].set_title('Gray Scale Image')
     axes[1].axis('off')
-    
-    # Reconstructed Image
-    axes[2].imshow(reconstructed_image, cmap='gray')
-    axes[2].set_title(f'Reconstruction (n={n_components})')
-    axes[2].axis('off')
-    
-    # Adjust layout
-    plt.tight_layout()
-    plt.show()
-    
-    # Return the number of components used for reconstruction
-    return n_components
 
+    # Reconstructed Image
+    if reconstructed_image is not None:
+        axes[2].imshow(reconstructed_image, cmap='gray')
+        axes[2].set_title(f'Reconstructed Image (n={min_n})')
+    else:
+        axes[2].set_title("No reconstruction within MSE threshold")
+    axes[2].axis('off')
+
+    # Adjust layout to prevent overlapping titles
+    plt.tight_layout(pad=2.0)
+
+    # Show the plot
+    plt.show()
+
+    # Return the minimum number of components that met the MSE threshold
+    return min_n
