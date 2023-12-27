@@ -1,6 +1,8 @@
 from PyQt6.QtWidgets import QWidget
 from PyQt6.QtGui import QPainter, QMouseEvent, QPen, QColor, QPalette
-from PyQt6.QtCore import Qt, QPoint
+from PyQt6.QtCore import Qt, QPoint, QBuffer, QIODevice
+from PIL import Image
+import io
 
 class GraffitiBoard(QWidget):
     def __init__(self):
@@ -45,4 +47,19 @@ class GraffitiBoard(QWidget):
         painter.setPen(self.pen)
         for line in self.lines:
             painter.drawLine(line[0], line[1])
+
+    def get_image(self):
+        # Capture the image from the graffiti board
+        qimage = self.grab().toImage()
+        buffer = QBuffer()
+        buffer.open(QIODevice.OpenModeFlag.ReadWrite)  # Use the correct flag for read-write mode
+        qimage.save(buffer, "PNG")  # Save the QImage to the buffer in PNG format
+
+        # Convert QBuffer to PIL Image
+        pil_im = Image.open(io.BytesIO(buffer.data()))
+        
+        # Close the buffer as it's good practice to close IO objects when done
+        buffer.close()
+        
+        return pil_im
     
