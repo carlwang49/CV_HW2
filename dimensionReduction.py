@@ -1,9 +1,9 @@
-from skimage import io, color
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.metrics import mean_squared_error
 from loguru import logger
+import cv2
 
 
 def calculate_mse_directly(original_pixels, reconstructed_pixels):
@@ -40,11 +40,12 @@ def dimension_reduction(image_path):
     - int: Minimum number of components required to achieve reconstruction error less than or equal to 3.0.
     """
     # Load the image
-    image = io.imread(image_path)
+    image_bgr = cv2.imread(image_path)
 
     # Convert to grayscale
-    gray_image = color.rgb2gray(image)
-
+    image = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
+    gray_image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+    
     # Normalize the grayscale image
     normalized_image = gray_image / 255.0
 
@@ -65,8 +66,8 @@ def dimension_reduction(image_path):
         reconstructed_data = pca.inverse_transform(transformed_data)
         reconstructed_data_original_scale = reconstructed_data * 255.0
         # Calculate MSE
-        mse = mean_squared_error(gray_image.flatten(),
-                                 reconstructed_data_original_scale.flatten())
+        mse = mean_squared_error(gray_image,
+                                 reconstructed_data_original_scale)
 
         # If MSE is within the threshold, store the number of components and reconstructed image
         if mse <= mse_threshold:
