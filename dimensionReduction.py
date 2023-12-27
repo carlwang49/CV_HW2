@@ -63,10 +63,10 @@ def dimension_reduction(image_path):
         pca.fit(normalized_image)  # Fit PCA on the image
         transformed_data = pca.transform(normalized_image)
         reconstructed_data = pca.inverse_transform(transformed_data)
-
+        reconstructed_data_original_scale = reconstructed_data * 255.0
         # Calculate MSE
         mse = mean_squared_error(gray_image.flatten(),
-                                 reconstructed_data.flatten())
+                                 reconstructed_data_original_scale.flatten())
 
         # If MSE is within the threshold, store the number of components and reconstructed image
         if mse <= mse_threshold:
