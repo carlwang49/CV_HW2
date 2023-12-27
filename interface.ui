@@ -40,7 +40,7 @@
      <string>Load Video</string>
     </property>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>150</x>
@@ -111,7 +111,7 @@
      </item>
     </layout>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>420</x>
@@ -142,7 +142,7 @@
           <item>
            <widget class="QPushButton" name="pushButton_11">
             <property name="text">
-             <string>2. Show Accuracy an Loss</string>
+             <string>2. Show Accuracy and Loss</string>
             </property>
            </widget>
           </item>
